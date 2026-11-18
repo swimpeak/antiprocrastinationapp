@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Start</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;600;700&display=swap">
+<style>
+:root{--bg:#eef2f6;--ink:#14213d;--mute:#5b6b7f;--line:#c9d3de;--card:#fff;--hi:#ffc93c;--ok:#2f8f6b;--bad:#c2410c;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1626;--ink:#eaf0f7;--mute:#94a3b8;--line:#273650;--card:#16223a;--hi:#ffc93c;--ok:#4cc29a;--bad:#fb923c;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Familjen Grotesk",system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:40px 20px 64px}
+h1{font-size:2.4rem;line-height:1;margin:0 0 6px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 32px}
+label{display:block;font-weight:600;margin-bottom:8px}
+input{width:100%;font:inherit;font-size:1.1rem;padding:14px 16px;border:2px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
+input:focus-visible,button:focus-visible{outline:3px solid var(--hi);outline-offset:2px}
+.chips{display:flex;gap:8px;margin:16px 0 20px;flex-wrap:wrap}
+.chip{font:inherit;font-weight:600;padding:8px 16px;border-radius:999px;border:2px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip[aria-checked=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.go{width:100%;font:inherit;font-size:1.3rem;font-weight:700;padding:18px;border:0;border-radius:12px;background:var(--hi);color:#14213d;cursor:pointer;box-shadow:0 5px 0 #b8901a;transition:transform .08s,box-shadow .08s}
+.go:active{transform:translateY(4px);box-shadow:0 1px 0 #b8901a}
+.go:disabled{opacity:.45;cursor:not-allowed}
+.ghost{font:inherit;background:none;border:0;color:var(--mute);text-decoration:underline;cursor:pointer;padding:8px 0}
+.hint{color:var(--mute);font-size:.95rem;margin:14px 0 0}
+.clock{font-size:clamp(4.5rem,24vw,7.5rem);font-weight:700;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums;margin:8px 0 20px}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--hi)}
+.task{font-size:1.25rem;font-weight:600;margin:0}
+.note{min-height:1.6em;margin:16px 0;color:var(--bad);font-weight:600}
+.row{display:flex;gap:10px;margin-top:16px}
+.row .go{font-size:1.05rem;padding:14px}
+.row .alt{background:transparent;color:var(--ink);box-shadow:none;border:2px solid var(--ink)}
+.stats{margin-top:44px;border-top:2px solid var(--line);padding-top:24px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.nums b{display:block;font-size:2rem;line-height:1.1}
+.nums span{color:var(--mute);font-size:.9rem}
+ul{list-style:none;padding:0;margin:0}
+li{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+li small{color:var(--mute)}
+li .ok{color:var(--ok);font-weight:600}
+li .no{color:var(--bad);font-weight:600}
+.empty{color:var(--mute)}
+[hidden]{display:none!important}
+body.focus{background:var(--ink);color:var(--bg)}
+body.focus .bar{background:#ffffff26}
+body.focus .stats{display:none}
+body.focus .ghost,body.focus .sub{color:#b6c2d3}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Start</h1>
+  <p class="sub">Pick one thing. Begin for five minutes. That counts.</p>
+
+  <section id="setup">
+    <label for="task">What are you putting off?</label>
+    <input id="task" maxlength="80" placeholder="Write the first paragraph of my report" autocomplete="off">
+    <div class="chips" role="radiogroup" aria-label="Session length">
+      <button class="chip" role="radio" data-m="5" aria-checked="true">5 min</button>
+      <button class="chip" role="radio" data-m="15" aria-checked="false">15 min</button>
+      <button class="chip" role="radio" data-m="25" aria-checked="false">25 min</button>
+      <button class="chip" role="radio" data-m="50" aria-checked="false">50 min</button>
+    </div>
+    <button class="go" id="go" disabled>Start 5 minutes</button>
+    <p class="hint">Leaving this tab during a session gets logged, and the timer keeps running.</p>
+  </section>
+
+  <section id="run" hidden>
+    <p class="task" id="runTask"></p>
+    <div class="clock" id="clock" aria-live="off">05:00</div>
+    <div class="bar" role="progressbar" aria-label="Session progress"><i id="fill"></i></div>
+    <p class="note" id="note" role="status"></p>
+    <button class="ghost" id="quit">Give up this session</button>
+  </section>
+
+  <section id="done" hidden>
+    <p class="task" id="doneMsg"></p>
+    <div class="row">
+      <button class="go" id="more">Keep going 20 min</button>
+      <button class="go alt" id="again">Finish</button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="nums">
+      <div><b id="sToday">0</b><span>minutes today</span></div>
+      <div><b id="sStreak">0</b><span>day streak</span></div>
+      <div><b id="sLeft">0</b><span>tab exits today</span></div>
+    </div>
+    <ul id="log"></ul>
+    <button class="ghost" id="clear" hidden>Clear history</button>
+  </section>
+</main>
+
+<script>
+(function(){
+  var $ = function(id){return document.getElementById(id)};
+  var KEY_S = "start.sessions", KEY_R = "start.running";
+  var mins = 5, run = null, timer = null, hiddenAt = 0;
+
+  function load(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+  function save(k, v){ try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  function fmt(ms){ var s = Math.max(0, Math.ceil(ms/1000)); return String(Math.floor(s/60)).padStart(2,"0") + ":" + String(s%60).padStart(2,"0"); }
+  function dayKey(t){ var d = new Date(t); return d.getFullYear() + "-" + (d.getMonth()+1) + "-" + d.getDate(); }
+  function esc(s){ return s.replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  function show(which){
+    ["setup","run","done"].forEach(function(id){ $(id).hidden = id !== which; });
+    document.body.classList.toggle("focus", which === "run");
+  }
+
+  function validate(){ $("go").disabled = !$("task").value.trim(); }
+  function setMins(m){
+    mins = m;
+    document.querySelectorAll(".chip").forEach(function(c){ c.setAttribute("aria-checked", String(+c.dataset.m === m)); });
+    $("go").textContent = "Start " + m + " minutes";
+  }
+
+  function start(task, m){
+    if ("Notification" in window && Notification.permission === "default") { try { Notification.requestPermission(); } catch(e){} }
+    run = { task: task, planned: m, start: Date.now(), end: Date.now() + m*60000, left: 0, away: 0 };
+    save(KEY_R, run);
+    begin();
+  }
+
+  function begin(){
+    $("runTask").textContent = run.task;
+    $("note").textContent = "";
+    show("run");
+    clearInterval(timer);
+    timer = setInterval(tick, 250);
+    tick();
+  }
+
+  function tick(){
+    var left = run.end - Date.now(), total = run.end - run.start;
+    $("clock").textContent = fmt(left);
+    $("fill").style.width = Math.min(100, (1 - left/total) * 100) + "%";
+    document.title = fmt(left) + " · " + run.task;
+    if (left <= 0) finish(true);
+  }
+
+  function record(done){
+    var list = load(KEY_S, []);
+    var spent = done ? run.planned : Math.round((Date.now() - run.start)/60000);
+    list.unshift({ task: run.task, planned: run.planned, mins: spent, at: Date.now(), left: run.left, away: Math.round(run.away/1000), done: done });
+    save(KEY_S, list.slice(0, 200));
+  }
+
+  function beep(){
+    try {
+      var a = new (window.AudioContext || window.webkitAudioContext)(), o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination); o.frequency.value = 660; g.gain.value = .15;
+      o.start(); o.stop(a.currentTime + .35);
+    } catch(e){}
+  }
+
+  function finish(done){
+    clearInterval(timer);
+    document.title = "Start";
+    if (done){
+      record(true);
+      beep();
+      if ("Notification" in window && Notification.permission === "granted") { try { new Notification("Session complete", { body: run.task }); } catch(e){} }
+      var t = run.task, p = run.planned;
+      $("doneMsg").textContent = p + " minutes on “" + t + "”. You started, and that was the hard part.";
+      $("more").hidden = p >= 25;
+      show("done");
+      run._last = { task: t };
+      lastTask = t;
+    } else {
+      record(false);
+      show("setup");
+    }
+    run = null;
+    save(KEY_R, null);
+    render();
+  }
+
+  var lastTask = "";
+
+  function render(){
+    var list = load(KEY_S, []), today = dayKey(Date.now());
+    var t = list.filter(function(s){ return dayKey(s.at) === today; });
+    $("sToday").textContent = t.reduce(function(a, s){ return a + (s.done ? s.mins : 0); }, 0);
+    $("sLeft").textContent = t.reduce(function(a, s){ return a + s.left; }, 0);
+
+    var days = {};
+    list.forEach(function(s){ if (s.done) days[dayKey(s.at)] = 1; });
+    var streak = 0, d = new Date();
+    if (!days[dayKey(d)]) d.setDate(d.getDate() - 1);
+    while (days[dayKey(d)]) { streak++; d.setDate(d.getDate() - 1); }
+    $("sStreak").textContent = streak;
+
+    $("log").innerHTML = list.length ? list.slice(0, 8).map(function(s){
+      var when = new Date(s.at).toLocaleString([], { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+      var extra = s.left ? " · left tab " + s.left + "×" : "";
+      return "<li><span>" + esc(s.task) + "<br><small>" + when + extra + "</small></span>" +
+             "<span class='" + (s.done ? "ok" : "no") + "'>" + (s.done ? s.mins + " min" : "stopped") + "</span></li>";
+    }).join("") : "<li class='empty'>No sessions yet. Your first one takes five minutes.</li>";
+    $("clear").hidden = !list.length;
+  }
+
+  document.addEventListener("visibilitychange", function(){
+    if (!run) return;
+    if (document.hidden){ hiddenAt = Date.now(); run.left++; save(KEY_R, run); }
+    else if (hiddenAt){
+      var gone = Date.now() - hiddenAt; hiddenAt = 0; run.away += gone; save(KEY_R, run);
+      var s = Math.round(gone/1000);
+      $("note").textContent = "You were away " + (s >= 60 ? Math.floor(s/60) + "m " + (s%60) + "s" : s + "s") + ". Back to it.";
+    }
+  });
+
+  window.addEventListener("beforeunload", function(e){
+    if (run){ e.preventDefault(); e.returnValue = ""; }
+  });
+
+  document.querySelectorAll(".chip").forEach(function(c){ c.addEventListener("click", function(){ setMins(+c.dataset.m); }); });
+  $("task").addEventListener("input", validate);
+  $("task").addEventListener("keydown", function(e){ if (e.key === "Enter" && !$("go").disabled) $("go").click(); });
+  $("go").addEventListener("click", function(){ start($("task").value.trim(), mins); });
+  $("quit").addEventListener("click", function(){ if (confirm("Stop this session? It will be logged as stopped.")) finish(false); });
+  $("more").addEventListener("click", function(){ start(lastTask, 20); });
+  $("again").addEventListener("click", function(){ $("task").value = ""; validate(); show("setup"); $("task").focus(); });
+  $("clear").addEventListener("click", function(){ if (confirm("Delete all session history?")) { save(KEY_S, null); render(); } });
+
+  setMins(5);
+  render();
+  var saved = load(KEY_R, null);
+  if (saved){ run = saved; begin(); }
+  else show("setup");
+})();
+</script>
+</body>
+</html>
